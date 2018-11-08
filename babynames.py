@@ -38,24 +38,30 @@ Suggested milestones for incremental development:
  -Fix main() to use the extract_names list
 """
 
-
 def extract_names(filename):
-    """
-    Given a file name for baby.html, returns a list starting with the year string
-    followed by the name-rank strings in alphabetical order.
-    ['2006', 'Aaliyah 91', Aaron 57', 'Abagail 895', ' ...]
-    """
-    # +++your code here+++
-    return
+    names_dict = {}
+    names_list = []
+    with open(filename) as file:
+        content = file.read()
+        year = re.findall(r'Popularity\sin\s(\d\d\d\d)', content)
+        ranked_names = re.findall(r'<td>(\d+)</td><td>(\w+)</td>\<td>(\w+)</td>', content)
 
+    for rank, male, female in ranked_names:
+        names_dict[male] = rank
+        names_dict[female] = rank
+    names_list.append(year[0])
+    [names_list.append(n + ' ' + r) for n, r in sorted(names_dict.items())]
+    return names_list
+
+def create_summary(names):
+    year = names[0]
+    names = '\n'.join(sorted(names)) + '\n'
+    with open('babynames' + year + '.html.summary', 'w') as f:
+        f.write(names)
 
 def main():
-    # This command-line parsing code is provided.
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--summaryfile', help='creates a summary file', action='store_true')
-    # The nargs option instructs the parser to expect 1 or more filenames.
-    # It will also expand wildcards just like the shell, e.g. 'baby*.html' will work.
+    parser.add_argument('--summaryfile', help='creates a summary file', action='store_true')
     parser.add_argument('files', help='filename(s) to parse', nargs='+')
     args = parser.parse_args()
 
@@ -65,12 +71,11 @@ def main():
 
     file_list = args.files
 
-    # option flag
-    create_summary = args.summaryfile
-
-    # +++your code here+++
-    # For each filename, get the names, then either print the text output
-    # or write it to a summary file
+    for file in file_list:
+        if args.summaryfile:
+            create_summary(extract_names(file))
+        else:
+            print('\n'.join(sorted(extract_names(file))) + '\n')
 
 
 if __name__ == '__main__':
